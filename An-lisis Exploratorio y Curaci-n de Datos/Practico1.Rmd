@@ -1,0 +1,87 @@
+---
+title: "Practico1"
+author: "Daniel Robins - Fernando Palacios"
+date: "9 de mayo de 2018"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+## Including Plots
+
+You can also embed plots, for example:
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+Visualizacion es una herramienta muy importante para la generacion de intuicion, pero
+raramente uno tiene los datos en la forma necesaria. Frecuentemente se necesitara 
+crear nuevas variables o simplemente reordenarlas.
+
+Exploraremos ahora la manipulacion basica utilizando un conjunto de datos sobre los
+vuelos en Nueva York en 2013.
+
+```{r echo=TRUE}
+library(nycflights13)
+fligths<-nycflights13::flights
+fligths
+```
+
+
+***
+## Practico 1: Entregar un Rmd donde se encuentren todos los vuelos que:
+
+- Que arribaron con un retraso de mas de dos horas.
+- Volaron hacia Houston (IAH o HOU)
+- Fueron operados por United, American o Delta.
+- Salieron en Verano (Julio, Agosto y Septiembre)
+- Arrivaron mas de dos horas tarde, pero salieron bien.
+- Salieron entre medianoche y las 6 am.
+
+
+***
+```{r echo=TRUE}
+str(fligths)
+```
+## Que arribaron con un retraso de mas de dos horas.
+```{r echo=TRUE}
+subset(fligths,fligths["arr_delay"]>120)
+```
+
+## Volaron hacia Houston (IAH o HOU)
+```{r echo=TRUE}
+subset(fligths,fligths["dest"]=='IAH' | fligths["dest"]=='HOU' )
+```
+
+## Fueron operados por United, American o Delta.
+```{r echo=TRUE}
+
+subset(fligths,carrier=='DL'|carrier=='AA'|carrier=='UA')
+
+# Airlines DL, AA, UA
+
+```
+
+## Salieron en Verano (Julio, Agosto y Septiembre)
+```{r echo=TRUE}
+subset(fligths, month >= 7 & month <= 9, select=c(month))
+```
+
+## Salieron entre medianoche y las 6 am.
+
+```{r echo=TRUE}
+
+subset(fligths,  dep_time<=600 )
+
+```
+
+
