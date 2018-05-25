@@ -1,0 +1,232 @@
+---
+title: "Ejercicio Cluster"
+author: "Daniel Robins - Fernando Palacios"
+date: "23 de mayo de 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+### Dataset
+
+El dataset utilizado corresponde a datos de ausentismo en el trabajo obtenido del siguiente sitio
+https://archive.ics.uci.edu/ml/datasets/Absenteeism+at+work
+
+
+```{r}
+
+ausentismo <- read.csv("https://raw.githubusercontent.com/fpalaciosdrobins/diplodatos/master/An-lisis%20Exploratorio%20y%20Curaci-n%20de%20Datos/Absenteeism_at_work.csv",header=TRUE,sep=";")
+
+summary(ausentismo)
+
+```
+
+### Análisis de Variables
+
+Queremos analizar del set de datos y las variables que tenemos continuas son las siguientes:
+
+Día de la semana, precio del transporte, distancia desde la casa al trabajo, tiempo de ausentismo en horas y cantidad de hijos
+
+```{r}
+
+
+#ausentismo$Day.of.the.week
+#ausentismo$Age
+#ausentismo$Transportation.expense
+#ausentismo$Distance.from.Residence.to.Work
+#ausentismo$Absenteeism.time.in.hours
+
+analisis <- subset(ausentismo, select=c("Day.of.the.week","Age","Transportation.expense","Distance.from.Residence.to.Work","Absenteeism.time.in.hours","Son"))
+
+variables_analizadas = 6
+
+plot(analisis[,1:6], col = analisis$Day.of.the.week, pch = 4, main = "Variables")
+
+```
+# Aplicamos la función de normalización scale para las variables
+
+```{r}
+# Aplicamos la función de normalización scale para las variables
+
+ausentismo.scale <- scale(analisis[,1:6])
+
+set.seed(100)
+ausentismo.km <- kmeans(ausentismo.scale,centers=6)
+
+names(ausentismo.km)
+
+
+print("..........Cluster...........")
+ausentismo.km$cluster
+print("..........Centers...........")
+ausentismo.km$centers
+print("..........totss.............")
+ausentismo.km$totss
+print("..........withinss..........")
+ausentismo.km$withinss
+print("..........tot.withinss......")
+ausentismo.km$tot.withinss
+print("..........betweenss.........")
+ausentismo.km$betweenss
+print("..........size..............")
+ausentismo.km$size
+print("..........iter..............")
+ausentismo.km$iter
+
+```
+# Determinar el número óptimo de Clusters por la suma de distancias interclusters
+
+```{r}
+
+# Determinar el número óptimo de Clusters
+
+sumbt <- kmeans(ausentismo.scale,centers = 1)$betweens
+
+for (i in 2:10) sumbt[i] <- kmeans(ausentismo.scale,centers = i)$betweenss
+     
+plot(1:10,sumbt,type="b",xlab="numero de clusters",ylab = "suma de cuadrados intergrupos")
+
+```
+# Análisis de Resultados
+
+```{r}
+# Inspeccionando los resultados
+
+plot(analisis$Distance.from.Residence.to.Work,analisis$Absenteeism.time.in.hours,col=ausentismo.km$cluster)
+
+```
+
+```{r}
+
+aggregate(analisis[,1:6], by=list(ausentismo.km$cluster),median)
+
+```
+
+### Análisis por otros métodos de Clustering
+
+# Normalización
+
+```{r}
+normalize <- function(x) {
+  return ((x-min(x))/(max(x)-min(x)))
+}
+```
+
+
+
+```{r}
+analisis_n <- as.data.frame(lapply(analisis[2:variables_analizadas], normalize))
+
+```
+
+```{r}
+analisis_train <- analisis_n[1:222, ]
+analisis_test  <- analisis_n[223:740, ] 
+
+analisis_train_labels <- analisis[1:222, 1]
+analisis_test_labels  <- analisis[223:740, 1]
+```
+
+```{r}
+library(class)
+analisis_test_pred <- knn(train=analisis_train, test=analisis_test, cl=analisis_train_labels, k=20)
+library(gmodels)
+CrossTable(x=analisis_test_labels, y=analisis_test_pred, prop.chisq = FALSE)
+```
+
+
+
+```{r}
+# Mclust comes with a method of hierarchical clustering. 
+library(mclust)
+# initialize 3 different classes.
+analisis_initialk <- mclust::hc(data = analisis, modelName = "EII")
+analisis_initialk <- mclust::hclass(analisis_initialk, 6)
+
+```
+
+```{r}
+# Select 4 continuous variables and look for dos distinct groups.
+analisis_mcl.model <- Mclust(analisis[, 2:variables_analizadas], 6)
+# Plot our results.
+
+plot(analisis_mcl.model, what = "classification", main = "Mclust Classification")
+
+```
+
+```{r}
+summary(analisis_mcl.model)
+```
+
+```{r}
+### ejemplo de K-means:
+
+set.seed(20)
+analisisCluster <- kmeans(analisis[, 2:variables_analizadas], 6, nstart = 20)
+analisisCluster
+```
+
+```{r}
+table(analisisCluster$cluster, analisis$Day.of.the.week)
+
+```
+```{r}
+aggregate(analisis[,1:variables_analizadas], by=list(analisisCluster$cluster),median)
+```
+
+```{r}
+plot(cbind(analisis$Distance.from.Residence.to.Work, analisis$Absenteeism.time.in.hours),col=analisisCluster$cluster)
+
+points(analisisCluster$centers[,3:4],col=11,pch=19,cex=3)
+points(matrix(colMeans(analisisCluster$centers[,3:4]),nrow = 1,ncol = 2),col=12,pch=19,cex=3)
+
+```
+```{r}
+library(ggplot2)
+analisisCluster$cluster <- as.factor(analisisCluster$cluster)
+ggplot(analisis, aes(analisis$Distance.from.Residence.to.Work, analisis$Absenteeism.time.in.hours, color = analisisCluster$cluster))+ geom_point()
+```
+
+```{r}
+tabla_analisis_gastos <- table(analisisCluster$cluster, analisis$Transportation.expense)
+tabla_analisis_horas <- table(analisisCluster$cluster, analisis$Absenteeism.time.in.hours)
+tabla_analisis_gastos
+tabla_analisis_horas
+
+
+```
+
+- Investigue los resultados en el meta parametro $K$ numero de cumulos e investigue posibles procesos de seleccion del mismo.
+
+La cantidad de cúmulos que nos permitió encontrar un grupo de datos interesantes son 6, y el procesos de selección que utilizamos es la suma de las distancias interclusters (between) graficadas, buscando donde las sumas acumuladas muestran decrecimiento en el gráfico
+
+Una vez graficado, hicimos iteraciones con diferentes cúmulos entre 4 y 7 hasta encontrar datos que nos parecian representativos
+
+- Elabore un resumen, y selecione un mejor valor segun el/los criterios aplicados, discuta el significado de los cumulos
+encontrados. 
+
+Hemos aplicado varios criterios de clustering, en primer lugar trabajamos con un dataset de una encuesta con variables discretas, cuyos valores estaban casi todas entre 1 y 5 y no nos permitió encontrar datos que nos sirvieran, entendemos que al ser todas las variables similares, las distancias para generar los clusters son también similares, por lo cual es mejor aplicar estos métodos con variables contínuas. 
+
+En este sentido cambiamos el dataset e hicimos el análisis que mostramos en este práctico.
+
+Las pruebas que hicimos con mclust como con knn no nos dieron agrupamientos que nos dijeran mucho a cerca de los datos analizados. 
+
+El método que si nos permitió encontrar valores interesantes es kmeans
+
+Pudimos distinguir dos grupos de trabajadores 
+1) Alto grado de ausentismo:  (Cluster 4)
+Representado por un grupo que viven cerca del trabajo, con dos hijos, que faltan el día de la semana 3 y edad moda de 40 años
+2) Altos costos de Transporte: (Cluster 1)
+Otro grupo con altos costos de transporte cuyos trabajadores son jóvenes que viven cerca del trabajo y los costos de transporte son altos, el ausentismo en este caso duplica a otro grupo cuyas distancias son similares pero el costo de transporte es bajo (Cluster 2)
+
+- Comente la influencia de la normalizacion de los datos en los resultados del clustering.
+
+Al tener variables con valores de escala muy diferentes, como pueden ser los dias de ausentismo y la cantidad de hijos o el gasto en transporte, si no normalizamos, la prevalencia de variables con valores más altos influyen en los agrupamientos, por lo cual es necesario normalizar todas las variables. Utilizamos dos métodos de normalización (scale y la función de suma de suma de cuadrados)
+
+
