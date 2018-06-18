@@ -1,1 +1,0 @@
-Ejercicio de Limpieza da Datos con Docker
