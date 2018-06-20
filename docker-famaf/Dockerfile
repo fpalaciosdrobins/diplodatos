@@ -13,6 +13,8 @@ RUN apt-get update && apt-get install -yq --no-install-recommends \
     emacs \
     git \
     inkscape \
+    'pandas=0.23*' \
+    'seaborn=0.8*' \
     jed \
     libsm6 \
     libxext-dev \
@@ -30,7 +32,8 @@ RUN apt-get update && apt-get install -yq --no-install-recommends \
     unzip \
     nano \
     && apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* \
+    fix-permissions /home/$NB_USER
 
 RUN conda install --quiet --yes \
     'conda-forge::blas=*=openblas' \
