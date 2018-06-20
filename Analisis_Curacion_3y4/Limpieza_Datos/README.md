@@ -7,8 +7,8 @@ docker build - < Dockerfile
 
 Genera la imágen con las siguiente configuración
 
-###Copyright (c) Jupyter Development Team.
-###Distributed under the terms of the Modified BSD License.
+#### Copyright (c) Jupyter Development Team.
+#### Distributed under the terms of the Modified BSD License.
 
 FROM jupyter/base-notebook
 
@@ -16,7 +16,7 @@ LABEL maintainer="Jupyter Project <jupyter@googlegroups.com>"
 
 USER root
 
-### Install all OS dependencies for fully functional notebook server
+#### Install all OS dependencies for fully functional notebook server
 RUN apt-get update && apt-get install -yq --no-install-recommends \
     build-essential \
     emacs \
@@ -49,8 +49,8 @@ RUN conda install --quiet --yes \
 
 RUN fix-permissions /home/$NB_USER
 
-###Descarga el trabajo practico de limpieza de datos mediante el comando clone
-###Subimos a este directorio también el archivo de salida del práctico tweet_energia_ok.csv
+### Descarga el trabajo practico de limpieza de datos mediante el comando clone
+### Subimos a este directorio también el archivo de salida del práctico tweet_energia_ok.csv
 
 RUN cd /home/jovyan/work && \
     git clone https://github.com/fpalaciosdrobins/diplo-docker
