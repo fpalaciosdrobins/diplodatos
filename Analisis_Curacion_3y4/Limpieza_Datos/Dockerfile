@@ -32,9 +32,17 @@ RUN apt-get update && apt-get install -yq --no-install-recommends \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+RUN conda install --quiet --yes \
+    'conda-forge::blas=*=openblas' \
+    'pandas=0.23*' \
+    'seaborn=0.8*'
+
+RUN fix-permissions /home/$NB_USER
+
 #Descarga el trabajo practico de limpieza de datos
 RUN cd /home/jovyan/work && \
     git clone https://github.com/fpalaciosdrobins/diplo-docker
+
 
 # Switch back to jovyan to avoid accidental container runs as root
 USER $NB_UID
